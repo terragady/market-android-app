@@ -32,12 +32,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.AutoGraph
-import androidx.compose.material.icons.filled.FiberManualRecord
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material.icons.filled.Widgets
-import androidx.compose.material.icons.outlined.Widgets
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -50,7 +47,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -68,6 +64,7 @@ import com.example.ui.components.AddStockDialog
 import com.example.ui.components.StockDetailHero
 import com.example.ui.components.WatchlistSection
 import com.example.ui.components.WidgetManagerSheet
+import com.example.ui.screens.StockDetailScreen
 import com.example.ui.theme.DarkBackground
 import com.example.ui.theme.DarkBorder
 import com.example.ui.theme.DarkSurface
@@ -76,7 +73,6 @@ import com.example.ui.theme.MyApplicationTheme
 import com.example.ui.theme.StockAccent
 import com.example.ui.theme.StockGain
 import com.example.ui.theme.StockGainBg
-import com.example.ui.theme.StockLoss
 import com.example.ui.theme.TextMuted
 import com.example.ui.theme.TextPrimary
 import com.example.ui.theme.TextSecondary
@@ -107,7 +103,10 @@ class MainActivity : ComponentActivity() {
     private fun handleWidgetIntent(intent: Intent?) {
         val symbol = intent?.getStringExtra(StockWidgetProvider.EXTRA_SYMBOL)
         if (!symbol.isNullOrBlank()) {
-            viewModel.selectStockBySymbol(symbol)
+            viewModel.selectStockBySymbol(symbol, openDetail = true)
+        }
+        if (intent?.getBooleanExtra(StockWidgetProvider.EXTRA_OPEN_WIDGET_SETTINGS, false) == true) {
+            viewModel.setShowWidgetSheet(true)
         }
     }
 }
@@ -117,77 +116,115 @@ class MainActivity : ComponentActivity() {
 fun StockPulseApp(viewModel: MainViewModel) {
     val uiState by viewModel.uiState.collectAsState()
 
-    Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        containerColor = DarkBackground,
-        topBar = {
-            StockTopAppBar(
-                isLive = uiState.isLiveStreaming,
-                isRefreshing = uiState.isRefreshing,
-                onToggleLive = { viewModel.toggleLiveStreaming() },
-                onRefresh = { viewModel.refreshQuotes() },
-                onOpenWidgetSheet = { viewModel.setShowWidgetSheet(true) }
-            )
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { viewModel.setShowAddStockDialog(true) },
-                containerColor = StockGain,
-                contentColor = Color(0xFF0A0D14),
-                shape = CircleShape,
-                modifier = Modifier.testTag("fab_add_stock")
-            ) {
-                Icon(imageVector = Icons.Default.Add, contentDescription = "Add stock to watchlist")
-            }
-        }
-    ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // Hero Spotlight: Currently selected stock with Day/Week chart
-            item {
-                val current = uiState.selectedStock
-                if (current != null) {
-                    StockDetailHero(
-                        stock = current,
-                        selectedTimeframe = uiState.selectedTimeframe,
-                        onTimeframeChange = { viewModel.setTimeframe(it) },
-                        onToggleFavorite = { viewModel.toggleFavorite(current) },
-                        onPinToWidget = { viewModel.pinToWidget(current) }
-                    )
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(200.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator(color = StockGain)
-                    }
+    // Full Page Stock Detail Screen when directed from widget or when tapping stock
+    if (uiState.isDetailScreenOpen && uiState.selectedStock != null) {
+        StockDetailScreen(
+            stock = uiState.selectedStock!!,
+            selectedTimeframe = uiState.selectedTimeframe,
+            onTimeframeChange = { viewModel.setTimeframe(it) },
+            onToggleFavorite = { viewModel.toggleFavorite(uiState.selectedStock!!) },
+            onPinToWidget = { viewModel.pinToWidget(uiState.selectedStock!!) },
+            onRefresh = { viewModel.refreshQuotes() },
+            onBack = { viewModel.closeStockDetail() }
+        )
+    } else {
+        // Main Watchlist Screen
+        Scaffold(
+            modifier = Modifier.fillMaxSize(),
+            containerColor = DarkBackground,
+            topBar = {
+                StockTopAppBar(
+                    isLive = uiState.isLiveStreaming,
+                    isRefreshing = uiState.isRefreshing,
+                    onToggleLive = { viewModel.toggleLiveStreaming() },
+                    onRefresh = { viewModel.refreshQuotes() },
+                    onOpenWidgetSheet = { viewModel.setShowWidgetSheet(true) }
+                )
+            },
+            floatingActionButton = {
+                FloatingActionButton(
+                    onClick = { viewModel.setShowAddStockDialog(true) },
+                    containerColor = StockGain,
+                    contentColor = Color(0xFF0A0D14),
+                    shape = CircleShape,
+                    modifier = Modifier.testTag("fab_add_stock")
+                ) {
+                    Icon(imageVector = Icons.Default.Add, contentDescription = "Add stock to watchlist")
                 }
             }
+        ) { innerPadding ->
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Hero Spotlight Card: Tap anywhere on it to open full detail screen!
+                item {
+                    val current = uiState.selectedStock
+                    if (current != null) {
+                        Column {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 6.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "MARKET SPOTLIGHT",
+                                    color = TextMuted,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = "Tap card for full page →",
+                                    color = StockAccent,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    modifier = Modifier.clickable { viewModel.openStockDetail(current) }
+                                )
+                            }
+                            StockDetailHero(
+                                stock = current,
+                                selectedTimeframe = uiState.selectedTimeframe,
+                                onTimeframeChange = { viewModel.setTimeframe(it) },
+                                onToggleFavorite = { viewModel.toggleFavorite(current) },
+                                onPinToWidget = { viewModel.pinToWidget(current) },
+                                modifier = Modifier.clickable { viewModel.openStockDetail(current) }
+                            )
+                        }
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(160.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(color = StockGain)
+                        }
+                    }
+                }
 
-            // Watchlist Section with Search, Sparklines, and Ticker tape
-            item {
-                WatchlistSection(
-                    stocks = uiState.stocks,
-                    selectedSymbol = uiState.selectedStock?.symbol ?: "",
-                    searchQuery = uiState.searchQuery,
-                    onSearchQueryChange = { viewModel.setSearchQuery(it) },
-                    onSelectStock = { viewModel.selectStock(it) },
-                    onToggleFavorite = { viewModel.toggleFavorite(it) },
-                    onPinToWidget = { viewModel.pinToWidget(it) },
-                    onDeleteStock = { viewModel.deleteStock(it) },
-                    onOpenAddDialog = { viewModel.setShowAddStockDialog(true) }
-                )
-            }
+                // Watchlist Section: Tapping any stock navigates to its full detail page
+                item {
+                    WatchlistSection(
+                        stocks = uiState.stocks,
+                        selectedSymbol = uiState.selectedStock?.symbol ?: "",
+                        searchQuery = uiState.searchQuery,
+                        onSearchQueryChange = { viewModel.setSearchQuery(it) },
+                        onSelectStock = { stock -> viewModel.openStockDetail(stock) },
+                        onToggleFavorite = { viewModel.toggleFavorite(it) },
+                        onPinToWidget = { viewModel.pinToWidget(it) },
+                        onDeleteStock = { viewModel.deleteStock(it) },
+                        onOpenAddDialog = { viewModel.setShowAddStockDialog(true) }
+                    )
+                }
 
-            item {
-                Spacer(modifier = Modifier.height(60.dp))
+                item {
+                    Spacer(modifier = Modifier.height(60.dp))
+                }
             }
         }
     }

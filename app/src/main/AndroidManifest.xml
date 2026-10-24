@@ -27,6 +27,16 @@
             </intent-filter>
         </activity>
 
+        <!-- Widget Configuration Activity for long-press edit and placement -->
+        <activity
+            android:name=".widget.WidgetConfigActivity"
+            android:exported="true"
+            android:theme="@style/Theme.MyApplication">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
+
         <!-- Home Screen App Widget Receiver -->
         <receiver
             android:name=".widget.StockWidgetProvider"

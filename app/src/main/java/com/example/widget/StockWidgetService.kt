@@ -129,27 +129,36 @@ class StockRemoteViewsFactory(private val context: Context) : RemoteViewsService
         baselinePrice: Double,
         isPositive: Boolean
     ): Bitmap {
-        val width = 140
-        val height = 48
+        val width = 280
+        val height = 70
         val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
 
         if (points.size < 2) return bitmap
 
-        val strokeColor = if (isPositive) Color.parseColor("#00E676") else Color.parseColor("#FF5252")
-        val gradStart = if (isPositive) Color.argb(80, 0, 230, 118) else Color.argb(80, 255, 82, 82)
-        val gradEnd = Color.argb(0, 0, 0, 0)
+        val strokeColor = if (isPositive) Color.argb(175, 0, 230, 118) else Color.argb(175, 255, 82, 82)
+        val gradStart = if (isPositive) Color.argb(70, 0, 230, 118) else Color.argb(70, 255, 82, 82)
+        val gradEnd = Color.argb(8, 0, 0, 0)
 
         val prices = points.map { it.price }
         val minPrice = min(baselinePrice, prices.minOrNull() ?: baselinePrice)
         val maxPrice = max(baselinePrice, prices.maxOrNull() ?: baselinePrice)
         val range = max(0.01, maxPrice - minPrice)
 
-        fun getX(i: Int): Float = (i.toFloat() / (points.size - 1)) * (width - 10f) + 5f
+        fun getX(i: Int): Float = (i.toFloat() / (points.size - 1)) * (width - 12f) + 6f
         fun getY(price: Double): Float {
             val norm = (price - minPrice) / range
-            return (height - 6f - (norm * (height - 12f))).toFloat().coerceIn(4f, height - 4f)
+            return (height - 8f - (norm * (height - 18f))).toFloat().coerceIn(6f, height - 6f)
         }
+
+        // Draw faint baseline
+        val baselineY = getY(baselinePrice)
+        val baselinePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.argb(35, 255, 255, 255)
+            strokeWidth = 1.2f
+            style = Paint.Style.STROKE
+        }
+        canvas.drawLine(6f, baselineY, width - 6f, baselineY, baselinePaint)
 
         val linePath = Path()
         val fillPath = Path()
@@ -186,11 +195,17 @@ class StockRemoteViewsFactory(private val context: Context) : RemoteViewsService
         }
         canvas.drawPath(linePath, strokePaint)
 
-        // Draw small dot on last price point
+        // Draw glowing point at the last price
         val lastX = getX(points.size - 1)
         val lastY = getY(points.last().price)
+        val glowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = if (isPositive) Color.argb(90, 0, 230, 118) else Color.argb(90, 255, 82, 82)
+            style = Paint.Style.FILL
+        }
+        canvas.drawCircle(lastX, lastY, 6f, glowPaint)
+
         val dotPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = strokeColor
+            color = if (isPositive) Color.parseColor("#00E676") else Color.parseColor("#FF5252")
             style = Paint.Style.FILL
         }
         canvas.drawCircle(lastX, lastY, 3.5f, dotPaint)

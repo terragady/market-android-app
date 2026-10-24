@@ -107,6 +107,7 @@ class StockWidgetProvider : AppWidgetProvider() {
         const val PREF_FILTER_FAVORITES = "pref_widget_filter_favorites"
 
         const val EXTRA_SYMBOL = "extra_stock_symbol"
+        const val EXTRA_OPEN_WIDGET_SETTINGS = "extra_open_widget_settings"
 
         fun updateAllWidgets(context: Context) {
             CoroutineScope(Dispatchers.IO).launch {
@@ -146,20 +147,6 @@ class StockWidgetProvider : AppWidgetProvider() {
             for (widgetId in appWidgetIds) {
                 val views = RemoteViews(context.packageName, R.layout.stock_widget_layout)
 
-                // Header labels
-                views.setTextViewText(
-                    R.id.widget_filter_label,
-                    if (onlyFavorites) "★ Favorites" else "All Stocks"
-                )
-                views.setTextViewText(
-                    R.id.widget_btn_graphs,
-                    if (showGraphs) "Chart: ON" else "Chart: OFF"
-                )
-                views.setTextColor(
-                    R.id.widget_btn_graphs,
-                    if (showGraphs) android.graphics.Color.parseColor("#2979FF") else android.graphics.Color.parseColor("#8E9AA8")
-                )
-                views.setTextViewText(R.id.widget_btn_timeframe, timeframe.label)
                 views.setTextViewText(R.id.widget_update_time, updatedText)
 
                 // Set up collection adapter for ListView with unique content Uri
@@ -182,43 +169,8 @@ class StockWidgetProvider : AppWidgetProvider() {
                 )
                 views.setPendingIntentTemplate(R.id.widget_stock_list, itemPendingIntent)
 
-                // Toggle Timeframe (1D vs 1W)
-                val toggleTfIntent = Intent(context, StockWidgetProvider::class.java).apply {
-                    action = ACTION_WIDGET_TOGGLE_TIMEFRAME
-                }
-                val toggleTfPending = PendingIntent.getBroadcast(
-                    context,
-                    201 + widgetId,
-                    toggleTfIntent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or flagImmutable
-                )
-                views.setOnClickPendingIntent(R.id.widget_btn_timeframe, toggleTfPending)
 
-                // Toggle Graphs (ON vs OFF)
-                val toggleGraphsIntent = Intent(context, StockWidgetProvider::class.java).apply {
-                    action = ACTION_WIDGET_TOGGLE_GRAPHS
-                }
-                val toggleGraphsPending = PendingIntent.getBroadcast(
-                    context,
-                    202 + widgetId,
-                    toggleGraphsIntent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or flagImmutable
-                )
-                views.setOnClickPendingIntent(R.id.widget_btn_graphs, toggleGraphsPending)
-
-                // Filter Favorites vs All
-                val filterIntent = Intent(context, StockWidgetProvider::class.java).apply {
-                    action = ACTION_WIDGET_FILTER_FAVS
-                }
-                val filterPending = PendingIntent.getBroadcast(
-                    context,
-                    203 + widgetId,
-                    filterIntent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or flagImmutable
-                )
-                views.setOnClickPendingIntent(R.id.widget_btn_filter, filterPending)
-
-                // Refresh Quotes
+                // Refresh Button
                 val refreshIntent = Intent(context, StockWidgetProvider::class.java).apply {
                     action = ACTION_WIDGET_REFRESH
                 }

@@ -5,99 +5,12 @@
     android:layout_height="match_parent"
     android:background="@drawable/widget_bg"
     android:orientation="vertical"
-    android:padding="8dp">
+    android:paddingStart="8dp"
+    android:paddingTop="4dp"
+    android:paddingEnd="8dp"
+    android:paddingBottom="4dp">
 
-    <!-- Top Controls Header -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingBottom="6dp">
-
-        <!-- Title & Filter Toggle -->
-        <LinearLayout
-            android:id="@+id/widget_btn_filter"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="StockPulse"
-                android:textColor="#FFFFFF"
-                android:textSize="13sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/widget_filter_label"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="6dp"
-                android:background="@drawable/widget_button_bg"
-                android:paddingStart="6dp"
-                android:paddingTop="2dp"
-                android:paddingEnd="6dp"
-                android:paddingBottom="2dp"
-                android:text="★ Favorites"
-                android:textColor="#FFD700"
-                android:textSize="10sp"
-                android:textStyle="bold" />
-        </LinearLayout>
-
-        <!-- Toggle Graphs ON/OFF Button -->
-        <TextView
-            android:id="@+id/widget_btn_graphs"
-            android:layout_width="wrap_content"
-            android:layout_height="28dp"
-            android:layout_marginStart="4dp"
-            android:background="@drawable/widget_button_bg"
-            android:gravity="center"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp"
-            android:text="Chart: ON"
-            android:textColor="#2979FF"
-            android:textSize="10sp"
-            android:textStyle="bold" />
-
-        <!-- Timeframe 1D / 1W Toggle Button -->
-        <TextView
-            android:id="@+id/widget_btn_timeframe"
-            android:layout_width="wrap_content"
-            android:layout_height="28dp"
-            android:layout_marginStart="4dp"
-            android:background="@drawable/widget_button_bg"
-            android:gravity="center"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp"
-            android:text="1D"
-            android:textColor="#00E676"
-            android:textSize="10sp"
-            android:textStyle="bold" />
-
-        <!-- Refresh Button -->
-        <ImageView
-            android:id="@+id/widget_btn_refresh"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
-            android:layout_marginStart="4dp"
-            android:background="@drawable/widget_button_bg"
-            android:contentDescription="Refresh quotes"
-            android:padding="5dp"
-            android:src="@drawable/ic_refresh" />
-    </LinearLayout>
-
-    <!-- Divider Line using ImageView (RemoteViews does not support bare View tag) -->
-    <ImageView
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="#242C3D"
-        android:contentDescription="" />
-
-    <!-- Multi-stock Scrollable Collection View -->
+    <!-- Multi-stock Scrollable Collection View takes maximum screen area -->
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -115,37 +28,38 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:gravity="center"
-            android:padding="16dp"
-            android:text="No favorite stocks found.\nStar stocks in StockPulse or tap filter."
+            android:padding="12dp"
+            android:text="No stocks found.\nStar or add stocks in StockPulse."
             android:textColor="#8E9AA8"
             android:textSize="11sp"
             android:visibility="gone" />
     </FrameLayout>
 
-    <!-- Footer Status -->
+    <!-- Subtle, compact bottom line with timestamp and refresh icon -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingTop="4dp">
+        android:paddingTop="2dp"
+        android:paddingBottom="2dp">
 
         <TextView
             android:id="@+id/widget_update_time"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Updated Just Now"
-            android:textColor="#6C788A"
+            android:text="Updated 10:45"
+            android:textColor="#5A6677"
             android:textSize="9sp" />
 
-        <TextView
-            android:id="@+id/widget_count_label"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Tap row to open in app"
-            android:textColor="#8E9AA8"
-            android:textSize="9sp" />
+        <ImageView
+            android:id="@+id/widget_btn_refresh"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:contentDescription="Refresh quotes"
+            android:padding="1dp"
+            android:src="@drawable/ic_refresh" />
     </LinearLayout>
 
 </LinearLayout>

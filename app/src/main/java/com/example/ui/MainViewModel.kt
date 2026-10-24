@@ -23,6 +23,7 @@ data class MainUiState(
     val searchQuery: String = "",
     val isRefreshing: Boolean = false,
     val isLiveStreaming: Boolean = true,
+    val isDetailScreenOpen: Boolean = false,
     val showAddStockDialog: Boolean = false,
     val showWidgetSheet: Boolean = false
 )
@@ -33,6 +34,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _uiState = MutableStateFlow(MainUiState())
     val uiState: StateFlow<MainUiState> = _uiState.asStateFlow()
 
+    private var pendingSymbolToSelect: String? = null
     private var liveStreamJob: Job? = null
 
     init {
@@ -40,24 +42,51 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             repository.initializeIfNeeded()
             repository.stocksFlow.collectLatest { list ->
                 _uiState.update { current ->
-                    val selected = list.find { it.symbol == current.selectedStock?.symbol }
-                        ?: list.find { it.isPinnedToWidget }
-                        ?: list.firstOrNull()
-                    current.copy(stocks = list, selectedStock = selected)
+                    val target = pendingSymbolToSelect
+                    val selected = if (target != null) {
+                        list.find { it.symbol.equals(target, ignoreCase = true) }
+                            ?: current.selectedStock
+                            ?: list.firstOrNull()
+                    } else {
+                        list.find { it.symbol == current.selectedStock?.symbol }
+                            ?: list.find { it.isPinnedToWidget }
+                            ?: list.firstOrNull()
+                    }
+
+                    val openDetail = if (target != null) true else current.isDetailScreenOpen
+                    if (target != null && selected != null) {
+                        pendingSymbolToSelect = null
+                    }
+
+                    current.copy(
+                        stocks = list,
+                        selectedStock = selected,
+                        isDetailScreenOpen = openDetail
+                    )
                 }
             }
         }
         startLiveStreaming()
     }
 
+    fun openStockDetail(stock: StockQuote) {
+        _uiState.update { it.copy(selectedStock = stock, isDetailScreenOpen = true) }
+    }
+
+    fun closeStockDetail() {
+        _uiState.update { it.copy(isDetailScreenOpen = false) }
+    }
+
     fun selectStock(stock: StockQuote) {
         _uiState.update { it.copy(selectedStock = stock) }
     }
 
-    fun selectStockBySymbol(symbol: String) {
+    fun selectStockBySymbol(symbol: String, openDetail: Boolean = true) {
+        pendingSymbolToSelect = symbol
         val found = _uiState.value.stocks.find { it.symbol.equals(symbol, ignoreCase = true) }
         if (found != null) {
-            _uiState.update { it.copy(selectedStock = found) }
+            pendingSymbolToSelect = null
+            _uiState.update { it.copy(selectedStock = found, isDetailScreenOpen = openDetail) }
         }
     }
 

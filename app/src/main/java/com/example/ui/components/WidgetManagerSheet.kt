@@ -422,7 +422,7 @@ fun WidgetManagerSheet(
             Spacer(modifier = Modifier.height(14.dp))
 
             Text(
-                text = "Tip: You can also tap 'Chart: ON/OFF', '1D/1W', and '★ Favorites' buttons directly on the home screen widget header to change settings anytime!",
+                text = "Tip: You can customize the widget anytime right here or long-press the widget on your home screen to reconfigure!",
                 color = TextMuted,
                 fontSize = 11.sp,
                 lineHeight = 15.sp
@@ -448,101 +448,55 @@ fun MultiStockWidgetPreview(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp)
+                .padding(10.dp)
         ) {
-            // Widget Header Preview
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("StockPulse", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Box(
-                        modifier = Modifier
-                            .background(Color(0xFF1F283D), RoundedCornerShape(4.dp))
-                            .padding(horizontal = 5.dp, vertical = 2.dp)
-                    ) {
-                        Text(
-                            text = if (onlyFavorites) "★ Favorites" else "All Stocks",
-                            color = Color(0xFFFFD700),
-                            fontSize = 9.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .background(Color(0xFF1F283D), RoundedCornerShape(4.dp))
-                            .padding(horizontal = 6.dp, vertical = 2.dp)
-                    ) {
-                        Text(
-                            text = if (showGraphs) "Chart: ON" else "Chart: OFF",
-                            color = if (showGraphs) Color(0xFF2979FF) else Color(0xFF8E9AA8),
-                            fontSize = 9.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Box(
-                        modifier = Modifier
-                            .background(Color(0xFF1F283D), RoundedCornerShape(4.dp))
-                            .padding(horizontal = 6.dp, vertical = 2.dp)
-                    ) {
-                        Text(timeframe.label, color = Color(0xFF00E676), fontSize = 9.sp, fontWeight = FontWeight.Bold)
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-            Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(Color(0xFF242C3D)))
-            Spacer(modifier = Modifier.height(6.dp))
-
-            // Multi-stock list preview
+            // Clean multi-stock list preview without headers
             stocks.forEach { stock ->
-                Row(
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 5.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                        .padding(vertical = 3.dp)
                 ) {
-                    Column(modifier = Modifier.weight(1.2f)) {
-                        Text(stock.symbol, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                        Text(stock.name, color = Color(0xFF8E9AA8), fontSize = 10.sp, maxLines = 1)
-                    }
-
                     if (showGraphs) {
                         MiniSparkline(
                             points = if (timeframe == Timeframe.DAY) stock.dayPoints else stock.weekPoints,
                             baselinePrice = if (timeframe == Timeframe.DAY) stock.previousClose else stock.weekStartPrice,
                             isPositive = if (timeframe == Timeframe.DAY) stock.isPositive else stock.weekChange >= 0,
                             modifier = Modifier
-                                .width(80.dp)
-                                .height(26.dp)
-                                .padding(horizontal = 6.dp)
+                                .fillMaxWidth()
+                                .height(38.dp)
                         )
                     }
 
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text(stock.formattedPrice(), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                        Spacer(modifier = Modifier.height(1.dp))
-                        Box(
-                            modifier = Modifier
-                                .background(
-                                    if (stock.isPositive) Color(0xFF133827) else Color(0xFF3D181D),
-                                    RoundedCornerShape(3.dp)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 6.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(stock.symbol, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                            Text(stock.name, color = Color(0xFF9EABB8), fontSize = 9.sp, maxLines = 1)
+                        }
+
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text(stock.formattedPrice(), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                            Spacer(modifier = Modifier.height(1.dp))
+                            Box(
+                                modifier = Modifier
+                                    .background(
+                                        if (stock.isPositive) Color(0xFF133827) else Color(0xFF3D181D),
+                                        RoundedCornerShape(3.dp)
+                                    )
+                                    .padding(horizontal = 5.dp, vertical = 1.dp)
+                            ) {
+                                Text(
+                                    text = if (timeframe == Timeframe.DAY) stock.formattedChangePercent() else stock.formattedWeekChangePercent(),
+                                    color = if (stock.isPositive) Color(0xFF00E676) else Color(0xFFFF5252),
+                                    fontSize = 9.5.sp,
+                                    fontWeight = FontWeight.Bold
                                 )
-                                .padding(horizontal = 5.dp, vertical = 1.dp)
-                        ) {
-                            Text(
-                                text = if (timeframe == Timeframe.DAY) stock.formattedChangePercent() else stock.formattedWeekChangePercent(),
-                                color = if (stock.isPositive) Color(0xFF00E676) else Color(0xFFFF5252),
-                                fontSize = 9.sp,
-                                fontWeight = FontWeight.Bold
-                            )
+                            }
                         }
                     }
                 }
@@ -551,10 +505,16 @@ fun MultiStockWidgetPreview(
             Spacer(modifier = Modifier.height(6.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("StockPulse • Multi-Stock Collection", color = Color(0xFF6C788A), fontSize = 9.sp)
-                Text("Resizable Grid", color = Color(0xFF8E9AA8), fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                Text("Updated 10:45", color = Color(0xFF5A6677), fontSize = 9.sp)
+                Icon(
+                    imageVector = Icons.Default.Refresh,
+                    contentDescription = null,
+                    tint = Color(0xFF5A6677),
+                    modifier = Modifier.size(13.dp)
+                )
             }
         }
     }
