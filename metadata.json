@@ -1,0 +1,6 @@
+{
+  "name": "StockPulse",
+  "description": "Live market stock prices, interactive day and week candlestick charts, daily change metrics, and customizable home screen widgets.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

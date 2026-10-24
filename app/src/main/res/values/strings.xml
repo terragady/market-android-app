@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">StockPulse</string>
+    <string name="widget_title">StockPulse Widget</string>
+    <string name="widget_description">Shows live stock prices and daily/weekly trend graph.</string>
+</resources>
